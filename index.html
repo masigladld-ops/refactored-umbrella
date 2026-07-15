@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Separation Station · AR English Adventure</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --teal-900:#0B3D40;
+    --teal-700:#0F5257;
+    --teal-500:#177A7F;
+    --mint:#7FC9AE;
+    --cream:#FBF5E6;
+    --cream-dim:#F0E7D0;
+    --yellow:#F2C14E;
+    --yellow-dark:#D9A22A;
+    --coral:#EF6F6C;
+    --coral-dark:#CF4E4B;
+    --ink:#123238;
+    --ink-soft:#3C5F63;
+    --shadow: 0 10px 28px rgba(11,61,64,.28);
+    --radius-lg: 26px;
+    --radius-md: 16px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    font-family:'Kanit', sans-serif;
+    background:
+      radial-gradient(1200px 700px at 15% -10%, #14646a 0%, transparent 60%),
+      radial-gradient(1000px 800px at 110% 10%, #0d4649 0%, transparent 55%),
+      linear-gradient(160deg, var(--teal-900), var(--teal-700) 55%, #0d4a4d 100%);
+    color:var(--cream);
+    min-height:100%;
+    overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+  .mono{font-family:'JetBrains Mono', monospace;}
+  #app{position:relative; max-width:920px; margin:0 auto; min-height:100vh; display:flex; flex-direction:column;}
+  button{font-family:inherit; cursor:pointer;}
+  .hidden{display:none !important;}
+
+  /* ---------- top bar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 16px; gap:8px; flex-wrap:wrap;
+  }
+  .brand{display:flex; align-items:center; gap:10px; font-weight:700; letter-spacing:.3px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%; background:var(--yellow); box-shadow:0 0 12px var(--yellow);}
+  .top-controls{display:flex; gap:8px; flex-wrap:wrap;}
+  .chip{
+    display:flex; align-items:center; gap:6px;
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+    padding:8px 12px; border-radius:999px; color:var(--cream); font-size:.85rem; font-weight:500;
+    transition:.15s;
+  }
+  .chip:hover{background:rgba(255,255,255,.16); transform:translateY(-1px);}
+  .chip.active{background:var(--yellow); color:var(--teal-900); border-color:var(--yellow); font-weight:700;}
+
+  /* ---------- generic screen ---------- */
+  .screen{flex:1; display:flex; flex-direction:column; padding:8px 20px 32px;}
+  .card{
+    background:var(--cream); color:var(--ink);
+    border-radius:var(--radius-lg); box-shadow:var(--shadow);
+    padding:22px;
+  }
+
+  /* ---------- cover ---------- */
+  .cover{display:flex; flex-direction:column; align-items:center; text-align:center; gap:14px; padding-top:10px;}
+  .cover h1{
+    font-size:clamp(1.8rem, 5vw, 2.6rem); margin:6px 0 0; font-weight:800; line-height:1.15;
+    text-shadow:0 4px 0 rgba(0,0,0,.15);
+  }
+  .cover .sub{color:var(--mint); font-weight:500; max-width:520px; margin:0 auto;}
+  .badge-row{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-top:4px;}
+  .badge{
+    background:rgba(255,255,255,.10); border:1px solid rgba(255,255,255,.2);
+    padding:6px 12px; border-radius:999px; font-size:.78rem; color:var(--cream);
+  }
+
+  /* conveyor signature element */
+  .conveyor-wrap{
+    width:100%; max-width:640px; margin:18px auto 4px;
+    background:var(--teal-900); border-radius:var(--radius-lg);
+    border:2px dashed rgba(242,193,78,.4);
+    padding:18px 14px 22px; position:relative; overflow:hidden;
+  }
+  .conveyor-label{font-size:.75rem; color:var(--mint); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:10px; font-weight:600;}
+  .belt-track{position:relative; height:64px; overflow:hidden; border-radius:10px; background:repeating-linear-gradient(90deg, #0a2f31 0 22px, #0d3a3d 22px 44px);}
+  .belt-track::before, .belt-track::after{content:""; position:absolute; top:0; bottom:0; width:56px; z-index:2;}
+  .belt-track::before{left:0; background:linear-gradient(90deg, var(--teal-900), transparent);}
+  .belt-track::after{right:0; background:linear-gradient(-90deg, var(--teal-900), transparent);}
+  .belt-items{position:absolute; top:50%; left:0; transform:translateY(-50%); display:flex; gap:34px; animation:beltmove 9s linear infinite; font-size:1.6rem;}
+  @keyframes beltmove{ from{transform:translate(0,-50%);} to{transform:translate(-560px,-50%);} }
+  .bins-row{display:flex; justify-content:space-between; margin-top:10px; gap:8px;}
+  .bin{flex:1; text-align:center; font-size:.68rem; color:var(--cream-dim); background:rgba(255,255,255,.05); border-radius:10px; padding:6px 4px;}
+  .bin b{display:block; font-size:1.1rem;}
+
+  .cta-row{display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:8px;}
+  .btn{
+    border:none; border-radius:16px; padding:14px 22px; font-weight:700; font-size:1rem;
+    display:inline-flex; align-items:center; gap:8px; transition:.15s; box-shadow:0 6px 0 rgba(0,0,0,.18);
+  }
+  .btn:active{transform:translateY(3px); box-shadow:0 3px 0 rgba(0,0,0,.18);}
+  .btn-primary{background:var(--yellow); color:var(--teal-900);}
+  .btn-primary:hover{background:#ffd066;}
+  .btn-ghost{background:rgba(255,255,255,.1); color:var(--cream); border:1px solid rgba(255,255,255,.25); box-shadow:none;}
+  .btn-ghost:hover{background:rgba(255,255,255,.18);}
+  .btn-coral{background:var(--coral); color:#fff;}
+  .btn-coral:hover{background:#ff8683;}
+  .btn-sm{padding:9px 14px; font-size:.82rem; border-radius:12px;}
+
+  /* ---------- camera modal ---------- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(6,26,28,.72); backdrop-filter:blur(3px);
+    display:flex; align-items:center; justify-content:center; z-index:80; padding:18px;
+  }
+  .modal{
+    background:var(--cream); color:var(--ink); border-radius:22px; padding:26px; max-width:420px; width:100%;
+    text-align:center; box-shadow:var(--shadow);
+  }
+  .modal h2{margin:6px 0 4px; font-size:1.3rem;}
+  .modal p{color:var(--ink-soft); font-size:.92rem; line-height:1.5;}
+  .modal .cta-row{margin-top:16px;}
+  .modal-icon{font-size:2.6rem;}
+
+  /* ---------- map ---------- */
+  .map-screen h2{text-align:center; margin:4px 0 2px; font-size:1.5rem;}
+  .map-screen .sub{text-align:center; color:var(--mint); font-size:.9rem; margin-bottom:6px;}
+  .stations{
+    display:flex; flex-direction:column; gap:16px; margin-top:18px; position:relative;
+  }
+  .stations::before{
+    content:""; position:absolute; left:34px; top:20px; bottom:20px; width:4px;
+    background:repeating-linear-gradient(180deg, var(--yellow) 0 10px, transparent 10px 18px);
+    border-radius:4px;
+  }
+  .station{
+    position:relative; display:flex; align-items:center; gap:16px;
+    background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.16);
+    border-radius:20px; padding:14px 18px; transition:.15s;
+  }
+  .station.unlocked{cursor:pointer;}
+  .station.unlocked:hover{background:rgba(255,255,255,.14); transform:translateX(4px);}
+  .station.locked{opacity:.5;}
+  .station .num{
+    width:52px; height:52px; min-width:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:1.5rem; background:var(--teal-900); border:3px solid var(--yellow); z-index:1;
+  }
+  .station.locked .num{border-color:rgba(255,255,255,.25); background:rgba(0,0,0,.2);}
+  .station .info{flex:1;}
+  .station .info .title{font-weight:700; font-size:1.02rem;}
+  .station .info .desc{font-size:.78rem; color:var(--mint);}
+  .station .stars{font-size:.95rem; letter-spacing:2px;}
+  .score-strip{
+    display:flex; justify-content:space-between; align-items:center; margin-top:20px;
+    background:rgba(255,255,255,.07); border-radius:16px; padding:10px 16px; font-size:.9rem;
+  }
+
+  /* ---------- level screen ---------- */
+  .level-hud{display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; gap:8px; flex-wrap:wrap;}
+  .hearts{font-size:1.1rem; letter-spacing:2px;}
+  .timer{font-weight:700; background:rgba(255,255,255,.12); padding:6px 12px; border-radius:999px;}
+  .timer.low{color:var(--coral); background:rgba(239,111,108,.18);}
+  .progress-track{height:8px; border-radius:8px; background:rgba(255,255,255,.15); overflow:hidden; margin-bottom:14px;}
+  .progress-fill{height:100%; background:var(--yellow); border-radius:8px; transition:width .3s;}
+
+  .question-card{text-align:center;}
+  .q-eyebrow{font-size:.72rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--teal-500); font-weight:700; margin-bottom:6px;}
+  .q-icon{font-size:3.4rem; margin:6px 0;}
+  .q-prompt{font-size:1.15rem; font-weight:600; line-height:1.45; margin:6px 0 4px;}
+  .q-sub{font-size:.86rem; color:var(--ink-soft); margin-bottom:14px;}
+
+  .options{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;}
+  @media(max-width:520px){ .options{grid-template-columns:1fr;} }
+  .option{
+    position:relative; background:#fff; border:2px solid #e5ddc4; border-radius:16px;
+    padding:14px 12px; font-weight:600; font-size:.98rem; text-align:left;
+    display:flex; align-items:center; gap:10px; overflow:hidden;
+  }
+  .option .num-key{
+    width:24px; height:24px; border-radius:6px; background:var(--cream-dim); color:var(--ink-soft);
+    display:flex; align-items:center; justify-content:center; font-size:.72rem; font-weight:700; flex:none;
+  }
+  .option .dwell-fill{
+    position:absolute; left:0; top:0; bottom:0; width:0%; background:rgba(242,193,78,.45); z-index:0;
+  }
+  .option span.label{position:relative; z-index:1;}
+  .option .num-key{position:relative; z-index:1;}
+  .option.correct{border-color:var(--mint); background:#eafaf2;}
+  .option.wrong{border-color:var(--coral); background:#fdeceb;}
+  .option:hover{border-color:var(--yellow-dark);}
+
+  .q-actions{display:flex; justify-content:center; gap:10px; margin-top:16px; flex-wrap:wrap;}
+  .hint-box{
+    margin-top:12px; background:var(--cream-dim); border-radius:12px; padding:10px 14px;
+    font-size:.85rem; color:var(--ink-soft); text-align:left;
+  }
+  .feedback-banner{
+    margin-top:12px; font-weight:700; border-radius:12px; padding:10px; font-size:.95rem;
+  }
+  .feedback-banner.ok{background:#eafaf2; color:#1b7a4d;}
+  .feedback-banner.no{background:#fdeceb; color:#b23b38;}
+
+  /* ---------- level complete ---------- */
+  .complete-screen{text-align:center;}
+  .complete-screen .stars-big{font-size:2.4rem; letter-spacing:6px; margin:10px 0;}
+  .stat-row{display:flex; gap:10px; justify-content:center; margin:14px 0; flex-wrap:wrap;}
+  .stat-pill{background:var(--cream-dim); border-radius:14px; padding:10px 16px; font-size:.85rem; min-width:110px;}
+  .stat-pill b{display:block; font-size:1.3rem; color:var(--teal-700);}
+
+  /* ---------- wheel (final review) ---------- */
+  .wheel-wrap{display:flex; justify-content:center; margin:16px 0;}
+  .wheel{
+    position:relative; width:230px; height:230px; border-radius:50%;
+    background:conic-gradient(#F2C14E 0 60deg, #EF6F6C 60deg 120deg, #7FC9AE 120deg 180deg, #6FA8DC 180deg 240deg, #C58AF9 240deg 300deg, #F2C14E 300deg 360deg);
+    box-shadow:var(--shadow);
+  }
+  .wheel-hub{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:74px; height:74px; border-radius:50%; background:var(--cream); display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; box-shadow:0 3px 8px rgba(0,0,0,.25);
+  }
+  .wheel-label{
+    position:absolute; font-size:.62rem; font-weight:700; color:#123238; background:rgba(255,255,255,.85);
+    padding:3px 6px; border-radius:6px; white-space:nowrap;
+  }
+  .facts-list{text-align:left; margin-top:10px; display:flex; flex-direction:column; gap:8px;}
+  .fact-item{background:var(--cream-dim); border-radius:12px; padding:10px 14px; font-size:.86rem; display:flex; gap:10px; align-items:flex-start;}
+  .fact-item .ic{font-size:1.2rem;}
+
+  /* ---------- AR camera ---------- */
+  #cam-wrap{
+    position:fixed; inset:0; z-index:5; pointer-events:none; overflow:hidden;
+  }
+  #cam-video{
+    position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
+    transform:scaleX(-1); opacity:0; transition:opacity .4s;
+  }
+  #cam-wrap.on #cam-video{opacity:.9;}
+  #cam-wrap.on::after{content:""; position:absolute; inset:0; background:linear-gradient(160deg, rgba(11,61,64,.55), rgba(11,61,64,.75));}
+  #hand-cursor{
+    position:fixed; width:34px; height:34px; border-radius:50%; border:3px solid var(--yellow);
+    background:rgba(242,193,78,.25); z-index:90; pointer-events:none; transform:translate(-50%,-50%);
+    display:none; box-shadow:0 0 14px rgba(242,193,78,.6);
+  }
+  #hand-cursor .ring{
+    position:absolute; inset:-3px; border-radius:50%; border:3px solid var(--coral); opacity:0;
+  }
+  #hand-cursor.dwelling .ring{opacity:1; animation:dwellring .6s linear forwards;}
+  @keyframes dwellring{ from{transform:scale(1); opacity:1;} to{transform:scale(1.9); opacity:0;} }
+
+  /* ---------- how-to / facts modal ---------- */
+  .sheet-overlay{position:fixed; inset:0; background:rgba(6,26,28,.72); z-index:85; display:flex; align-items:flex-end; justify-content:center;}
+  @media(min-width:640px){ .sheet-overlay{align-items:center;} }
+  .sheet{
+    background:var(--cream); color:var(--ink); width:100%; max-width:480px; border-radius:22px 22px 0 0;
+    padding:22px; max-height:82vh; overflow-y:auto;
+  }
+  @media(min-width:640px){ .sheet{border-radius:22px;} }
+  .sheet h3{margin-top:0;}
+  .sheet ol, .sheet ul{padding-left:20px; line-height:1.7; font-size:.92rem;}
+  .sheet .close-x{float:right; background:none; border:none; font-size:1.1rem; color:var(--ink-soft);}
+  .kbd{
+    background:var(--teal-900); color:var(--cream); border-radius:5px; padding:1px 6px; font-size:.75rem; font-family:'JetBrains Mono';
+  }
+
+  /* rotate hint */
+  #rotate-hint{
+    position:fixed; inset:0; background:var(--teal-900); color:var(--cream); z-index:200;
+    display:none; align-items:center; justify-content:center; flex-direction:column; text-align:center; gap:10px; padding:20px;
+  }
+  @media (max-width:640px) and (orientation:portrait){ #rotate-hint.enabled{display:flex;} }
+
+  footer.foot{text-align:center; font-size:.7rem; color:rgba(251,245,230,.5); padding:14px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div class="topbar">
+    <div class="brand"><span class="dot"></span> <span data-i18n="brandName">Separation Station</span></div>
+    <div class="top-controls">
+      <button class="chip" id="lang-en" onclick="setLang('en')">EN</button>
+      <button class="chip" id="lang-th" onclick="setLang('th')">TH</button>
+      <button class="chip" id="cam-toggle-chip" onclick="toggleCameraFromChip()">📷 <span id="cam-chip-label">Off</span></button>
+      <button class="chip" id="sound-toggle-chip" onclick="toggleSound()">🔊</button>
+    </div>
+  </div>
+
+  <!-- ============ COVER ============ -->
+  <section class="screen cover" id="screen-cover">
+    <div class="badge-row">
+      <span class="badge" data-i18n="badgeGrade">Grade 6 · CEFR A1</span>
+      <span class="badge" data-i18n="badgeTopic">Topic: Separation Techniques</span>
+      <span class="badge" data-i18n="badgeAR">✋ Hand-motion AR</span>
+    </div>
+    <div style="font-size:3.4rem; margin-top:4px;">🧪🧲🕳️</div>
+    <h1 data-i18n="coverTitle">Separation Station</h1>
+    <p class="sub" data-i18n="coverSub">Point with your finger, sort the mixtures, and learn English words for separating things — sieving, filtering, and more!</p>
+
+    <div class="conveyor-wrap">
+      <div class="conveyor-label" data-i18n="conveyorLabel">Mixed up? Let's sort it out!</div>
+      <div class="belt-track">
+        <div class="belt-items">
+          <span>🪨</span><span>💧</span><span>🧂</span><span>🌾</span><span>🔩</span><span>🪨</span><span>💧</span><span>🧂</span><span>🌾</span><span>🔩</span><span>🪨</span><span>💧</span><span>🧂</span><span>🌾</span><span>🔩</span>
+        </div>
+      </div>
+      <div class="bins-row">
+        <div class="bin"><b>🕳️</b><span data-i18n="binSieve">Sieve</span></div>
+        <div class="bin"><b>🧪</b><span data-i18n="binFilter">Filter</span></div>
+        <div class="bin"><b>🧲</b><span data-i18n="binMagnet">Magnet</span></div>
+        <div class="bin"><b>⚗️</b><span data-i18n="binEvap">Evaporate</span></div>
+      </div>
+    </div>
+
+    <div class="cta-row">
+      <button class="btn btn-primary" onclick="openCameraModal('start')">🧭 <span data-i18n="startBtn">Start Adventure</span></button>
+      <button class="btn btn-ghost" onclick="openSheet('how')">✋ <span data-i18n="howBtn">How to Play</span></button>
+      <button class="btn btn-ghost" onclick="openSheet('facts')">💡 <span data-i18n="factBtn">Fun Facts</span></button>
+    </div>
+  </section>
+
+  <!-- ============ MAP ============ -->
+  <section class="screen map-screen hidden" id="screen-map">
+    <h2 data-i18n="mapTitle">Separation Station Map</h2>
+    <p class="sub" data-i18n="mapSub">Complete all 3 stations to become a Separation Expert!</p>
+    <div class="stations" id="stations-list"></div>
+    <div class="score-strip">
+      <span>⭐ <span id="total-stars">0</span>/9</span>
+      <span class="mono" id="total-score">0/100</span>
+      <button class="chip" onclick="goHome()">🏠 <span data-i18n="home">Home</span></button>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL ============ -->
+  <section class="screen hidden" id="screen-level">
+    <div class="level-hud">
+      <div class="hearts mono" id="hearts-display">❤️❤️❤️</div>
+      <div class="timer mono" id="timer-display">01:30</div>
+      <div>
+        <button class="chip" onclick="pauseLevel()">⏸️</button>
+        <button class="chip" onclick="goMapFromLevel()">🗺️</button>
+      </div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+
+    <div class="card question-card" id="question-card">
+      <div class="q-eyebrow" id="q-eyebrow">Station 1 · Meet the Tools</div>
+      <div class="q-icon" id="q-icon">🕳️</div>
+      <div class="q-prompt" id="q-prompt">What is this tool called?</div>
+      <div class="q-sub" id="q-sub">แปลว่าอะไร?</div>
+      <div class="options" id="options-list"></div>
+      <div class="hint-box hidden" id="hint-box"></div>
+      <div class="feedback-banner hidden" id="feedback-banner"></div>
+      <div class="q-actions">
+        <button class="btn btn-ghost btn-sm" onclick="showHint()">💡 <span data-i18n="hint">Hint</span></button>
+        <button class="btn btn-primary btn-sm hidden" id="next-btn" onclick="nextQuestion()"><span data-i18n="nextQ">Next</span> ➜</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ LEVEL COMPLETE ============ -->
+  <section class="screen hidden" id="screen-complete">
+    <div class="card complete-screen">
+      <div style="font-size:2.4rem;">🏅</div>
+      <h2 data-i18n="levelComplete">Station Complete!</h2>
+      <div class="stars-big" id="complete-stars">⭐⭐⭐</div>
+      <div class="stat-row">
+        <div class="stat-pill"><b id="complete-correct">0</b><span data-i18n="correctCount">Correct</span></div>
+        <div class="stat-pill"><b id="complete-review">0</b><span data-i18n="reviewCount">Review</span></div>
+        <div class="stat-pill"><b id="complete-score">0</b><span data-i18n="scoreLabel">Score</span></div>
+      </div>
+      <p id="complete-msg" style="color:var(--ink-soft);" data-i18n="completeMsgGood">Great job, little scientist!</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" id="complete-next-btn" onclick="goNextLevel()"><span data-i18n="nextStation">Next Station</span> ➜</button>
+        <button class="btn btn-ghost" onclick="goMap()">🗺️ <span data-i18n="backMap">Back to Map</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FINAL REVIEW (WHEEL) ============ -->
+  <section class="screen hidden" id="screen-final">
+    <div class="card">
+      <div style="text-align:center;">
+        <div style="font-size:2.4rem;">🌟🏆🌟</div>
+        <h2 data-i18n="finalTitle">Mission Complete!</h2>
+        <p style="color:var(--ink-soft);" data-i18n="finalSub">You mastered English words for separation techniques!</p>
+      </div>
+      <div class="wheel-wrap">
+        <div class="wheel" id="review-wheel">
+          <div class="wheel-hub">🌀</div>
+        </div>
+      </div>
+      <div class="facts-list" id="final-facts-list"></div>
+      <div class="cta-row" style="margin-top:16px;">
+        <button class="btn btn-primary" onclick="restartGame()">🔄 <span data-i18n="playAgain">Play Again</span></button>
+        <button class="btn btn-ghost" onclick="goHome()">🏠 <span data-i18n="backHome">Back to Home</span></button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="foot">Separation Station · AR English Adventure for Grade 6 · A1</footer>
+</div>
+
+<!-- AR camera layer -->
+<div id="cam-wrap"><video id="cam-video" autoplay playsinline muted></video></div>
+<div id="hand-cursor"><div class="ring"></div></div>
+
+<!-- rotate hint -->
+<div id="rotate-hint"><div style="font-size:2.4rem;">📱</div><div data-i18n="rotateMsg">Rotate your device to landscape for the best adventure.</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+/* ============================================================
+   I18N
+   ============================================================ */
+const I18N = {
+en:{
+  brandName:"Separation Station",
+  badgeGrade:"Grade 6 · CEFR A1", badgeTopic:"Topic: Separation Techniques", badgeAR:"✋ Hand-motion AR",
+  coverTitle:"Separation Station", coverSub:"Point with your finger, sort the mixtures, and learn English words for separating things — sieving, filtering, and more!",
+  conveyorLabel:"Mixed up? Let's sort it out!",
+  binSieve:"Sieve", binFilter:"Filter", binMagnet:"Magnet", binEvap:"Evaporate",
+  startBtn:"Start Adventure", howBtn:"How to Play", factBtn:"Fun Facts",
+  modalTitle:"Ready to explore?", modalDesc:"Turn on the camera to point and select with your fingertip, like a real AR scientist. Or jump in now with your mouse or a tap.",
+  camOn:"Turn On AR Camera", camOff:"Play Without Camera",
+  camDeniedTitle:"Camera not available",
+  camDeniedDesc:"We couldn't reach your camera. No problem — you can still play with your mouse or finger tap.",
+  mapTitle:"Separation Station Map", mapSub:"Complete all 3 stations to become a Separation Expert!",
+  home:"Home", locked:"Locked",
+  s1title:"Meet the Tools", s1desc:"Learn the tool names",
+  s2title:"Sort It Out", s2desc:"Match mixtures to techniques",
+  s3title:"Complete the Sentence", s3desc:"Fill in the missing word",
+  hint:"Hint", nextQ:"Next",
+  levelComplete:"Station Complete!", correctCount:"Correct", reviewCount:"Review", scoreLabel:"Score",
+  completeMsgGood:"Great job, little scientist!", completeMsgOk:"Good try! A little review will help.",
+  nextStation:"Next Station", backMap:"Back to Map",
+  finalTitle:"Mission Complete!", finalSub:"You mastered English words for separation techniques!",
+  playAgain:"Play Again", backHome:"Back to Home",
+  rotateMsg:"Rotate your device to landscape for the best adventure.",
+  timeUpMsg:"Time's up! Let's keep going.",
+  correctMsg:"✅ Correct! Well done!",
+  wrongMsg:"❌ Not quite. Look at the hint!",
+  pauseTitle:"Taking a break?",
+  pauseDesc:"Rest your eyes, then come back and keep sorting!",
+  resume:"Resume", pauseToMap:"Back to Map",
+  howTitle:"How to Play",
+  howList:[
+    "Turn on the camera before you start.",
+    "Hold your fingertip still over a card for 0.5 seconds to select it — or just tap/click.",
+    "Sort the tools and mixtures the correct way.",
+    "Choose the right English word to complete each sentence.",
+    "Finish all 3 stations to complete your mission!"
+  ],
+  kbdList:[
+    "<span class='kbd'>Tab</span> / <span class='kbd'>Enter</span> — choose an answer",
+    "<span class='kbd'>1–4</span> — pick option 1 to 4",
+    "<span class='kbd'>H</span> — hint &nbsp; <span class='kbd'>P</span> — pause &nbsp; <span class='kbd'>C</span> — camera &nbsp; <span class='kbd'>M</span> — sound &nbsp; <span class='kbd'>L</span> — language"
+  ],
+  factsTitle:"Fun Facts: Separation Techniques",
+  factsList:[
+    {ic:"🕳️", en:"Sieving separates solids of different sizes, like stones and sand."},
+    {ic:"🧪", en:"Filtration separates an solid that does not dissolve from a liquid, using filter paper."},
+    {ic:"🧲", en:"Magnetic separation uses a magnet to pull out iron or steel objects."},
+    {ic:"⚗️", en:"Evaporation removes a liquid by heating, leaving the dissolved solid behind — like getting salt from salt water."},
+    {ic:"🪣", en:"Decantation means carefully pouring off a liquid and leaving the solid that has settled at the bottom."},
+    {ic:"✋", en:"Hand-picking means using your hand to pick out large solid pieces from a mixture."}
+  ]
+},
+th:{
+  brandName:"สถานีแยกสาร",
+  badgeGrade:"ป.6 · CEFR A1", badgeTopic:"หัวข้อ: การแยกสาร", badgeAR:"✋ AR ควบคุมด้วยมือ",
+  coverTitle:"สถานีแยกสาร", coverSub:"ใช้ปลายนิ้วชี้ควบคุม แยกของผสม แล้วเรียนคำศัพท์ภาษาอังกฤษเรื่องการแยกสาร เช่น การร่อน การกรอง และอื่น ๆ!",
+  conveyorLabel:"ของผสมกันยุ่งเหยิง มาช่วยแยกกันเถอะ!",
+  binSieve:"ตะแกรงร่อน", binFilter:"กรอง", binMagnet:"แม่เหล็ก", binEvap:"การระเหย",
+  startBtn:"เริ่มผจญภัย", howBtn:"วิธีเล่น", factBtn:"สาระน่ารู้",
+  modalTitle:"พร้อมออกสำรวจหรือยัง?", modalDesc:"เปิดกล้องเพื่อใช้ปลายนิ้วชี้แทนเคอร์เซอร์ เหมือนนักวิทยาศาสตร์ AR ตัวจริง หรือจะเล่นด้วยเมาส์/แตะหน้าจอตอนนี้เลยก็ได้",
+  camOn:"เปิดกล้อง AR", camOff:"เล่นโดยไม่เปิดกล้อง",
+  camDeniedTitle:"ไม่พบกล้อง",
+  camDeniedDesc:"เราเข้าถึงกล้องไม่ได้ ไม่เป็นไร เล่นด้วยเมาส์หรือแตะหน้าจอได้เลย",
+  mapTitle:"แผนที่สถานีแยกสาร", mapSub:"ผ่านให้ครบทั้ง 3 สถานี เพื่อเป็นผู้เชี่ยวชาญการแยกสาร!",
+  home:"หน้าหลัก", locked:"ยังไม่ปลดล็อก",
+  s1title:"รู้จักเครื่องมือ", s1desc:"เรียนชื่อเครื่องมือภาษาอังกฤษ",
+  s2title:"แยกให้ถูกวิธี", s2desc:"จับคู่ของผสมกับวิธีแยกสาร",
+  s3title:"เติมประโยคให้สมบูรณ์", s3desc:"เลือกคำที่หายไป",
+  hint:"คำใบ้", nextQ:"ต่อไป",
+  levelComplete:"ผ่านสถานีแล้ว!", correctCount:"ตอบถูก", reviewCount:"ควรทบทวน", scoreLabel:"คะแนน",
+  completeMsgGood:"เก่งมาก นักวิทยาศาสตร์น้อย!", completeMsgOk:"พยายามได้ดี ลองทบทวนอีกนิดนะ",
+  nextStation:"สถานีถัดไป", backMap:"กลับแผนที่",
+  finalTitle:"ภารกิจสำเร็จ!", finalSub:"คุณเรียนรู้คำศัพท์ภาษาอังกฤษเรื่องการแยกสารครบแล้ว!",
+  playAgain:"เล่นอีกครั้ง", backHome:"กลับหน้าหลัก",
+  rotateMsg:"หมุนอุปกรณ์เป็นแนวนอนเพื่อประสบการณ์ที่ดีที่สุด",
+  timeUpMsg:"หมดเวลา! ไปกันต่อเลย",
+  correctMsg:"✅ ถูกต้อง! เก่งมาก!",
+  wrongMsg:"❌ ยังไม่ถูก ลองดูคำใบ้สิ!",
+  pauseTitle:"พักสักครู่ไหม?",
+  pauseDesc:"พักสายตาสักครู่ แล้วกลับมาแยกสารกันต่อ!",
+  resume:"เล่นต่อ", pauseToMap:"กลับแผนที่",
+  howTitle:"วิธีเล่น",
+  howList:[
+    "เปิดกล้องก่อนเริ่มเกม",
+    "ใช้ปลายนิ้วชี้ค้างที่การ์ดคำตอบ 0.5 วินาทีเพื่อเลือก หรือแตะ/คลิกก็ได้",
+    "แยกเครื่องมือและของผสมให้ถูกวิธี",
+    "เลือกคำภาษาอังกฤษที่ถูกต้องเติมประโยค",
+    "เล่นให้ครบ 3 สถานีเพื่อพิชิตภารกิจ!"
+  ],
+  kbdList:[
+    "<span class='kbd'>Tab</span> / <span class='kbd'>Enter</span> — เลือกคำตอบ",
+    "<span class='kbd'>1–4</span> — เลือกตัวเลือกที่ 1–4",
+    "<span class='kbd'>H</span> คำใบ้ &nbsp; <span class='kbd'>P</span> พัก &nbsp; <span class='kbd'>C</span> กล้อง &nbsp; <span class='kbd'>M</span> เสียง &nbsp; <span class='kbd'>L</span> ภาษา"
+  ],
+  factsTitle:"สาระน่ารู้: วิธีแยกสาร",
+  factsList:[
+    {ic:"🕳️", en:"การร่อน (Sieving) ใช้แยกของแข็งที่มีขนาดต่างกัน เช่น ก้อนหินกับทราย"},
+    {ic:"🧪", en:"การกรอง (Filtration) ใช้กระดาษกรองแยกของแข็งที่ไม่ละลายออกจากของเหลว"},
+    {ic:"🧲", en:"การแยกด้วยแม่เหล็ก (Magnetic separation) ใช้แม่เหล็กดูดวัตถุที่เป็นเหล็ก"},
+    {ic:"⚗️", en:"การระเหย (Evaporation) ใช้ความร้อนไล่ของเหลวออก เหลือของแข็งที่ละลายอยู่ เช่น การได้เกลือจากน้ำเกลือ"},
+    {ic:"🪣", en:"การรินแยก (Decantation) คือการค่อย ๆ รินของเหลวออก โดยเหลือตะกอนไว้ที่ก้นภาชนะ"},
+    {ic:"✋", en:"การหยิบด้วยมือ (Hand-picking) คือการใช้มือหยิบชิ้นของแข็งขนาดใหญ่ออกจากของผสม"}
+  ]
+}
+};
+
+/* ============================================================
+   GAME CONTENT — Separation Techniques (A1 English)
+   ============================================================ */
+const LEVEL1_TOOLS = [ // vocabulary matching
+  {icon:"🕳️", en:"sieve", prompt_en:"What is this tool called?", prompt_th:"เครื่องมือนี้เรียกว่าอะไร?", options:["sieve","magnet","filter","spoon"], hint_en:"It has small holes to let small pieces pass through.", hint_th:"มีรูเล็ก ๆ ให้ชิ้นเล็กลอดผ่านได้"},
+  {icon:"🧪", en:"filter", prompt_en:"What is this tool called?", prompt_th:"เครื่องมือนี้เรียกว่าอะไร?", options:["filter","magnet","sieve","dish"], hint_en:"It uses paper to catch solid pieces from a liquid.", hint_th:"ใช้กระดาษดักของแข็งออกจากของเหลว"},
+  {icon:"🧲", en:"magnet", prompt_en:"What is this tool called?", prompt_th:"เครื่องมือนี้เรียกว่าอะไร?", options:["magnet","funnel","sieve","filter"], hint_en:"It pulls iron and steel objects toward it.", hint_th:"ดูดวัตถุที่เป็นเหล็กเข้าหาตัวมัน"},
+  {icon:"⚗️", en:"evaporating dish", prompt_en:"What is this tool called?", prompt_th:"เครื่องมือนี้เรียกว่าอะไร?", options:["evaporating dish","magnet","sieve","jug"], hint_en:"We heat liquid in this dish until it disappears.", hint_th:"ใช้ให้ความร้อนของเหลวจนระเหยหายไป"},
+  {icon:"🪣", en:"jug", prompt_en:"What is this tool called?", prompt_th:"เครื่องมือนี้เรียกว่าอะไร?", options:["jug","sieve","magnet","filter"], hint_en:"We use it to carefully pour off a liquid.", hint_th:"ใช้รินของเหลวออกอย่างระมัดระวัง"}
+];
+
+const LEVEL2_MATCHES = [ // mixture -> correct technique
+  {icon:"🪨💧", mix_en:"sand + water", mix_th:"ทราย + น้ำ", answer:"filtration", options:["filtration","magnetic separation","sieving","evaporation"], hint_en:"The sand does not dissolve — use filter paper.", hint_th:"ทรายไม่ละลายน้ำ ใช้กระดาษกรอง"},
+  {icon:"🔩🌾", mix_en:"iron nails + rice", mix_th:"ตะปูเหล็ก + ข้าวสาร", answer:"magnetic separation", options:["magnetic separation","evaporation","decantation","hand-picking"], hint_en:"Iron nails are attracted to a magnet.", hint_th:"ตะปูเหล็กถูกแม่เหล็กดูดได้"},
+  {icon:"🧂💧", mix_en:"salt + water", mix_th:"เกลือ + น้ำ", answer:"evaporation", options:["evaporation","sieving","filtration","hand-picking"], hint_en:"Heat the water until it disappears, salt stays behind.", hint_th:"ให้ความร้อนจนน้ำระเหยไป เหลือเกลือไว้"},
+  {icon:"🪨🌾", mix_en:"big stones + small stones", mix_th:"หินก้อนใหญ่ + หินก้อนเล็ก", answer:"sieving", options:["sieving","evaporation","magnetic separation","filtration"], hint_en:"Use a tool with holes of the right size.", hint_th:"ใช้เครื่องมือที่มีรูขนาดพอดี"},
+  {icon:"🟤💧", mix_en:"mud + water (mud has settled)", mix_th:"โคลน + น้ำ (โคลนตกตะกอนแล้ว)", answer:"decantation", options:["decantation","sieving","magnetic separation","hand-picking"], hint_en:"Carefully pour off the clean water on top.", hint_th:"ค่อย ๆ รินน้ำใสด้านบนออก"},
+  {icon:"🌾🪨", mix_en:"rice + a few big stones", mix_th:"ข้าวสาร + หินก้อนใหญ่บางก้อน", answer:"hand-picking", options:["hand-picking","evaporation","filtration","magnetic separation"], hint_en:"Just a few big pieces — pick them out by hand.", hint_th:"มีก้อนใหญ่ไม่กี่ก้อน หยิบออกด้วยมือได้เลย"}
+];
+
+const LEVEL3_SENTENCES = [
+  {before:"We use a ", after:" to separate big stones from small stones.", th:"เราใช้ ___ เพื่อแยกก้อนหินใหญ่กับก้อนหินเล็ก", answer:"sieve", options:["sieve","magnet","spoon","dish"], hint_en:"A tool with holes.", hint_th:"เครื่องมือที่มีรู"},
+  {before:"A ", after:" picks up iron nails from rice.", th:"___ ดูดตะปูเหล็กออกจากข้าวสาร", answer:"magnet", options:["magnet","sieve","filter","jug"], hint_en:"It attracts iron and steel.", hint_th:"ดูดของที่เป็นเหล็ก"},
+  {before:"We ", after:" the salt water to get salt.", th:"เรา ___ น้ำเกลือเพื่อให้ได้เกลือ", answer:"heat", options:["heat","freeze","cut","push"], hint_en:"We make it hot so the water disappears.", hint_th:"ทำให้ร้อนจนน้ำระเหยหายไป"},
+  {before:"Filter paper separates sand from ", after:".", th:"กระดาษกรองแยกทรายออกจาก ___", answer:"water", options:["water","iron","salt","stones"], hint_en:"Sand does not dissolve in this liquid.", hint_th:"ทรายไม่ละลายในของเหลวชนิดนี้"},
+  {before:"First the mud sinks. Then we ", after:" the clean water.", th:"โคลนจมก่อน แล้วเรา ___ น้ำใสออก", answer:"pour off", options:["pour off","heat up","cut up","pick up"], hint_en:"We tip the jug carefully.", hint_th:"เอียงเหยือกอย่างระมัดระวัง"},
+  {before:"We pick out big stones ", after:".", th:"เราหยิบก้อนหินใหญ่ออก ___", answer:"by hand", options:["by hand","with water","by heating","with a magnet"], hint_en:"No tool needed — just use your fingers.", hint_th:"ไม่ต้องใช้เครื่องมือ ใช้นิ้วมือหยิบได้เลย"}
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = {
+  lang:'en',
+  soundOn:true,
+  cameraOn:false,
+  camIntent:null,   // 'start' | levelNumber
+  currentLevel:0,
+  qIndex:0,
+  hearts:3,
+  correct:0,
+  wrong:0,
+  levelResults:{1:null,2:null,3:null}, // {stars, correct, total}
+  totalScore:0,
+  timerSeconds:90,
+  timerInterval:null,
+  paused:false,
+  selectedOption:null,
+  answered:false
+};
+
+const LEVEL_DATA = {1:LEVEL1_TOOLS, 2:LEVEL2_MATCHES, 3:LEVEL3_SENTENCES};
+const LEVEL_TITLE_KEY = {1:'s1title',2:'s2title',3:'s3title'};
+
+function t(key){ return I18N[state.lang][key]; }
+
+/* ============================================================
+   I18N RENDERING
+   ============================================================ */
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key = el.getAttribute('data-i18n');
+    const val = I18N[state.lang][key];
+    if(typeof val === 'string') el.textContent = val;
+  });
+  document.getElementById('lang-en').classList.toggle('active', state.lang==='en');
+  document.getElementById('lang-th').classList.toggle('active', state.lang==='th');
+  document.documentElement.lang = state.lang;
+  renderMap();
+  if(!document.getElementById('screen-level').classList.contains('hidden')) renderQuestion();
+}
+function setLang(l){ state.lang = l; applyI18n(); }
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showScreen(id){
+  ['screen-cover','screen-map','screen-level','screen-complete','screen-final'].forEach(s=>{
+    document.getElementById(s).classList.toggle('hidden', s!==id);
+  });
+}
+function goHome(){ stopTimer(); showScreen('screen-cover'); }
+function goMap(){ stopTimer(); showScreen('screen-map'); renderMap(); }
+function goMapFromLevel(){ goMap(); }
+
+function restartGame(){
+  state.currentLevel=0; state.levelResults={1:null,2:null,3:null}; state.totalScore=0;
+  goHome();
+}
+
+/* ============================================================
+   CAMERA MODAL / HAND TRACKING
+   ============================================================ */
+function openCameraModal(intent){
+  state.camIntent = intent;
+  const ov = document.createElement('div');
+  ov.className='modal-overlay'; ov.id='cam-modal';
+  ov.innerHTML = `
+    <div class="modal">
+      <div class="modal-icon">✋📷</div>
+      <h2>${t('modalTitle')}</h2>
+      <p>${t('modalDesc')}</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="enableCamera()">📷 ${t('camOn')}</button>
+        <button class="btn btn-ghost" onclick="skipCamera()">🖱️ ${t('camOff')}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+function closeCameraModal(){ const m=document.getElementById('cam-modal'); if(m) m.remove(); }
+
+function skipCamera(){
+  closeCameraModal();
+  proceedAfterCameraChoice();
+}
+
+let mpHands=null, mpCamera=null;
+function enableCamera(){
+  closeCameraModal();
+  const video = document.getElementById('cam-video');
+  navigator.mediaDevices.getUserMedia({video:{facingMode:'user'}}).then(stream=>{
+    video.srcObject = stream;
+    state.cameraOn = true;
+    document.getElementById('cam-wrap').classList.add('on');
+    document.getElementById('cam-chip-label').textContent = state.lang==='en'?'On':'เปิด';
+    document.getElementById('hand-cursor').style.display='block';
+    initHandTracking(video);
+    proceedAfterCameraChoice();
+  }).catch(()=>{
+    showCameraDenied();
+  });
+}
+function showCameraDenied(){
+  const ov = document.createElement('div');
+  ov.className='modal-overlay'; ov.id='cam-denied-modal';
+  ov.innerHTML = `
+    <div class="modal">
+      <div class="modal-icon">🚫📷</div>
+      <h2>${t('camDeniedTitle')}</h2>
+      <p>${t('camDeniedDesc')}</p>
+      <div class="cta-row"><button class="btn btn-primary" onclick="dismissDenied()">OK</button></div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+function dismissDenied(){
+  const m=document.getElementById('cam-denied-modal'); if(m) m.remove();
+  proceedAfterCameraChoice();
+}
+function toggleCameraFromChip(){
+  if(state.cameraOn){
+    // turn off
+    const video = document.getElementById('cam-video');
+    if(video.srcObject){ video.srcObject.getTracks().forEach(tr=>tr.stop()); video.srcObject=null; }
+    state.cameraOn=false;
+    document.getElementById('cam-wrap').classList.remove('on');
+    document.getElementById('cam-chip-label').textContent = state.lang==='en'?'Off':'ปิด';
+    document.getElementById('hand-cursor').style.display='none';
+  } else {
+    openCameraModal('reenable');
+  }
+}
+function proceedAfterCameraChoice(){
+  if(state.camIntent==='start'){ goMap(); }
+  else if(typeof state.camIntent === 'number'){ startLevel(state.camIntent); }
+  state.camIntent=null;
+}
+
+function initHandTracking(video){
+  if(typeof Hands === 'undefined' || typeof Camera === 'undefined'){ return; }
+  mpHands = new Hands({locateFile:(f)=>`https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`});
+  mpHands.setOptions({maxNumHands:1, modelComplexity:0, minDetectionConfidence:0.6, minTrackingConfidence:0.5});
+  mpHands.onResults(onHandResults);
+  mpCamera = new Camera(video, {
+    onFrame: async ()=>{ await mpHands.send({image:video}); },
+    width:480, height:360
+  });
+  mpCamera.start();
+}
+
+let dwellTarget=null, dwellStart=0, dwellRAF=null;
+function onHandResults(results){
+  const cursor = document.getElementById('hand-cursor');
+  if(!results.multiHandLandmarks || results.multiHandLandmarks.length===0){
+    cursor.style.display = state.cameraOn ? 'block' : 'none';
+    return;
+  }
+  const lm = results.multiHandLandmarks[0][8]; // index fingertip
+  // mirror x because video is mirrored visually
+  const x = (1 - lm.x) * window.innerWidth;
+  const y = lm.y * window.innerHeight;
+  cursor.style.left = x+'px';
+  cursor.style.top = y+'px';
+  cursor.style.display='block';
+  updateDwell(x,y,cursor);
+}
+function updateDwell(x,y,cursor){
+  const el = document.elementFromPoint(x,y);
+  const selectable = el ? el.closest('.selectable') : null;
+  if(selectable !== dwellTarget){
+    dwellTarget = selectable;
+    dwellStart = performance.now();
+    document.querySelectorAll('.dwell-fill').forEach(f=>f.style.width='0%');
+    cursor.classList.remove('dwelling');
+  }
+  if(dwellTarget){
+    const elapsed = performance.now() - dwellStart;
+    const pct = Math.min(100, (elapsed/600)*100);
+    const fill = dwellTarget.querySelector('.dwell-fill');
+    if(fill) fill.style.width = pct+'%';
+    if(elapsed >= 600){
+      cursor.classList.add('dwelling');
+      const target = dwellTarget;
+      dwellTarget=null; dwellStart=0;
+      setTimeout(()=>cursor.classList.remove('dwelling'), 250);
+      target.click();
+    }
+  }
+}
+
+/* ============================================================
+   MAP RENDERING
+   ============================================================ */
+function isUnlocked(n){ return n===1 || state.levelResults[n-1]!==null; }
+function renderMap(){
+  const wrap = document.getElementById('stations-list');
+  wrap.innerHTML='';
+  [1,2,3].forEach(n=>{
+    const unlocked = isUnlocked(n);
+    const res = state.levelResults[n];
+    const stars = res ? '⭐'.repeat(res.stars)+'☆'.repeat(3-res.stars) : (unlocked? '☆☆☆':'🔒');
+    const div = document.createElement('div');
+    div.className = 'station ' + (unlocked?'unlocked':'locked');
+    div.innerHTML = `
+      <div class="num">${n===1?'🕳️':n===2?'🔄':'📝'}</div>
+      <div class="info">
+        <div class="title">${I18N[state.lang]['s'+n+'title']}</div>
+        <div class="desc">${I18N[state.lang]['s'+n+'desc']}</div>
+      </div>
+      <div class="stars">${stars}</div>`;
+    if(unlocked){ div.onclick = ()=>launchLevel(n); }
+    wrap.appendChild(div);
+  });
+  const totalStars = [1,2,3].reduce((a,n)=> a + (state.levelResults[n]? state.levelResults[n].stars:0), 0);
+  document.getElementById('total-stars').textContent = totalStars;
+  document.getElementById('total-score').textContent = state.totalScore + '/100';
+}
+
+function launchLevel(n){
+  if(state.cameraOn){ startLevel(n); }
+  else { openCameraModal(n); }
+}
+
+/* ============================================================
+   LEVEL / QUESTION LOGIC
+   ============================================================ */
+function startLevel(n){
+  state.currentLevel = n;
+  state.qIndex = 0;
+  state.hearts = 3;
+  state.correct = 0;
+  state.wrong = 0;
+  state.timerSeconds = 90;
+  showScreen('screen-level');
+  startTimer();
+  renderQuestion();
+}
+
+function startTimer(){
+  stopTimer();
+  updateTimerDisplay();
+  state.timerInterval = setInterval(()=>{
+    if(state.paused) return;
+    state.timerSeconds--;
+    if(state.timerSeconds<=0){
+      state.timerSeconds=0;
+      updateTimerDisplay();
+      flashTimeUp();
+      state.timerSeconds=90; // soft reset, keep pace gentle for A1 learners
+      return;
+    }
+    updateTimerDisplay();
+  },1000);
+}
+function stopTimer(){ if(state.timerInterval){ clearInterval(state.timerInterval); state.timerInterval=null; } }
+function updateTimerDisplay(){
+  const m = Math.floor(state.timerSeconds/60).toString().padStart(2,'0');
+  const s = (state.timerSeconds%60).toString().padStart(2,'0');
+  const disp = document.getElementById('timer-display');
+  disp.textContent = `${m}:${s}`;
+  disp.classList.toggle('low', state.timerSeconds<=15);
+}
+function flashTimeUp(){
+  const banner = document.getElementById('feedback-banner');
+  banner.classList.remove('hidden','ok','no');
+  banner.classList.add('ok');
+  banner.textContent = '⏱️ ' + t('timeUpMsg');
+  setTimeout(()=>banner.classList.add('hidden'), 1400);
+}
+
+function currentQuestion(){ return LEVEL_DATA[state.currentLevel][state.qIndex]; }
+
+function renderQuestion(){
+  state.answered=false;
+  document.getElementById('next-btn').classList.add('hidden');
+  document.getElementById('hint-box').classList.add('hidden');
+  document.getElementById('feedback-banner').classList.add('hidden');
+  document.getElementById('hearts-display').textContent = '❤️'.repeat(state.hearts) + '🖤'.repeat(3-state.hearts);
+  const total = LEVEL_DATA[state.currentLevel].length;
+  document.getElementById('progress-fill').style.width = Math.round((state.qIndex/total)*100)+'%';
+  document.getElementById('q-eyebrow').textContent = `${t('s'+state.currentLevel+'title')} · ${state.qIndex+1}/${total}`;
+
+  const q = currentQuestion();
+  const optionsWrap = document.getElementById('options-list');
+  optionsWrap.innerHTML='';
+
+  if(state.currentLevel===1){
+    document.getElementById('q-icon').textContent = q.icon;
+    document.getElementById('q-prompt').textContent = state.lang==='en'? q.prompt_en : q.prompt_th;
+    document.getElementById('q-sub').textContent = state.lang==='en'? 'เครื่องมือนี้เรียกว่าอะไร?' : q.prompt_en;
+    buildOptions(q.options, q.en, q.hint_en, q.hint_th);
+  } else if(state.currentLevel===2){
+    document.getElementById('q-icon').textContent = q.icon;
+    document.getElementById('q-prompt').textContent = (state.lang==='en'? 'Mixture: ' : 'ของผสม: ') + (state.lang==='en'? q.mix_en : q.mix_th);
+    document.getElementById('q-sub').textContent = state.lang==='en' ? 'Which technique separates it?' : 'ควรใช้วิธีแยกสารแบบไหน?';
+    buildOptions(q.options, q.answer, q.hint_en, q.hint_th);
+  } else {
+    document.getElementById('q-icon').textContent = '📝';
+    document.getElementById('q-prompt').textContent = q.before + '____' + q.after;
+    document.getElementById('q-sub').textContent = state.lang==='en' ? q.th : q.th;
+    buildOptions(q.options, q.answer, q.hint_en, q.hint_th);
+  }
+}
+
+function buildOptions(options, answer, hintEn, hintTh){
+  const wrap = document.getElementById('options-list');
+  wrap.innerHTML='';
+  options.forEach((opt,i)=>{
+    const btn = document.createElement('button');
+    btn.className='option selectable';
+    btn.setAttribute('data-answer', opt===answer ? '1':'0');
+    btn.innerHTML = `<span class="dwell-fill"></span><span class="num-key">${i+1}</span><span class="label">${opt}</span>`;
+    btn.onclick = ()=> selectOption(btn, opt===answer, hintEn, hintTh);
+    wrap.appendChild(btn);
+  });
+  window._currentHint = {en:hintEn, th:hintTh};
+}
+
+function selectOption(btn, isCorrect, hintEn, hintTh){
+  if(state.answered) return;
+  state.answered = true;
+  document.querySelectorAll('.option').forEach(o=> o.classList.remove('correct','wrong'));
+  const banner = document.getElementById('feedback-banner');
+  banner.classList.remove('hidden','ok','no');
+  if(isCorrect){
+    btn.classList.add('correct');
+    state.correct++;
+    banner.classList.add('ok');
+    banner.textContent = t('correctMsg');
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.option').forEach(o=>{ if(o.getAttribute('data-answer')==='1') o.classList.add('correct'); });
+    state.wrong++;
+    state.hearts = Math.max(0, state.hearts-1);
+    document.getElementById('hearts-display').textContent = '❤️'.repeat(state.hearts) + '🖤'.repeat(3-state.hearts);
+    banner.classList.add('no');
+    banner.textContent = t('wrongMsg');
+  }
+  document.getElementById('next-btn').classList.remove('hidden');
+}
+
+function showHint(){
+  const box = document.getElementById('hint-box');
+  const h = window._currentHint || {en:'',th:''};
+  box.textContent = '💡 ' + (state.lang==='en' ? h.en : h.th);
+  box.classList.remove('hidden');
+}
+
+function nextQuestion(){
+  const total = LEVEL_DATA[state.currentLevel].length;
+  state.qIndex++;
+  if(state.qIndex >= total){
+    finishLevel();
+  } else {
+    renderQuestion();
+  }
+}
+
+function finishLevel(){
+  stopTimer();
+  const total = LEVEL_DATA[state.currentLevel].length;
+  const pct = state.correct/total;
+  let stars = pct>=0.9?3: pct>=0.6?2: pct>=0.3?1:0;
+  state.levelResults[state.currentLevel] = {stars, correct:state.correct, total};
+  // recompute total score out of 100 across all levels attempted so far
+  const allTotals = [1,2,3].reduce((a,n)=> a + (LEVEL_DATA[n]?LEVEL_DATA[n].length:0), 0);
+  const allCorrect = [1,2,3].reduce((a,n)=> a + (state.levelResults[n]? state.levelResults[n].correct:0), 0);
+  state.totalScore = Math.round((allCorrect/allTotals)*100);
+
+  document.getElementById('complete-stars').textContent = '⭐'.repeat(stars)+'☆'.repeat(3-stars);
+  document.getElementById('complete-correct').textContent = state.correct;
+  document.getElementById('complete-review').textContent = state.wrong;
+  document.getElementById('complete-score').textContent = state.totalScore;
+  document.getElementById('complete-msg').textContent = stars>=2 ? t('completeMsgGood') : t('completeMsgOk');
+
+  const nextBtn = document.getElementById('complete-next-btn');
+  if(state.currentLevel<3){
+    nextBtn.classList.remove('hidden');
+    nextBtn.innerHTML = `<span>${t('nextStation')}</span> ➜`;
+    nextBtn.onclick = ()=> goNextLevel();
+  } else {
+    nextBtn.classList.add('hidden');
+  }
+  showScreen('screen-complete');
+
+  if(state.currentLevel===3){
+    setTimeout(showFinal, 50);
+  }
+}
+
+function goNextLevel(){
+  const n = state.currentLevel+1;
+  if(n>3){ showFinal(); return; }
+  if(state.cameraOn){ startLevel(n); } else { openCameraModal(n); }
+}
+
+/* ============================================================
+   FINAL REVIEW WHEEL
+   ============================================================ */
+function showFinal(){
+  showScreen('screen-final');
+  const wheel = document.getElementById('review-wheel');
+  wheel.querySelectorAll('.wheel-label').forEach(l=>l.remove());
+  const labels = [
+    {ic:'🕳️', en:'Sieving', th:'การร่อน', angle:30},
+    {ic:'🧪', en:'Filtration', th:'การกรอง', angle:90},
+    {ic:'🧲', en:'Magnetic', th:'แม่เหล็ก', angle:150},
+    {ic:'⚗️', en:'Evaporation', th:'การระเหย', angle:210},
+    {ic:'🪣', en:'Decantation', th:'การรินแยก', angle:270},
+    {ic:'✋', en:'Hand-picking', th:'หยิบด้วยมือ', angle:330}
+  ];
+  const R = 105;
+  labels.forEach(l=>{
+    const rad = (l.angle-90) * Math.PI/180;
+    const x = 115 + R*Math.cos(rad) - 34;
+    const y = 115 + R*Math.sin(rad) - 10;
+    const div = document.createElement('div');
+    div.className='wheel-label';
+    div.style.left = x+'px'; div.style.top = y+'px';
+    div.textContent = l.ic + ' ' + (state.lang==='en'? l.en : l.th);
+    wheel.appendChild(div);
+  });
+  const factsWrap = document.getElementById('final-facts-list');
+  factsWrap.innerHTML='';
+  I18N[state.lang].factsList.forEach(f=>{
+    const d = document.createElement('div');
+    d.className='fact-item';
+    d.innerHTML = `<span class="ic">${f.ic}</span><span>${f.en}</span>`;
+    factsWrap.appendChild(d);
+  });
+}
+
+/* ============================================================
+   PAUSE
+   ============================================================ */
+function pauseLevel(){
+  state.paused = true;
+  const ov = document.createElement('div');
+  ov.className='modal-overlay'; ov.id='pause-modal';
+  ov.innerHTML = `
+    <div class="modal">
+      <div class="modal-icon">⏸️</div>
+      <h2>${t('pauseTitle')}</h2>
+      <p>${t('pauseDesc')}</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="resumeLevel()">▶️ ${t('resume')}</button>
+        <button class="btn btn-ghost" onclick="pauseToMap()">🗺️ ${t('pauseToMap')}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ov);
+}
+function resumeLevel(){ state.paused=false; const m=document.getElementById('pause-modal'); if(m) m.remove(); }
+function pauseToMap(){ state.paused=false; const m=document.getElementById('pause-modal'); if(m) m.remove(); goMap(); }
+
+/* ============================================================
+   SHEETS (How to Play / Facts)
+   ============================================================ */
+function openSheet(type){
+  const ov = document.createElement('div');
+  ov.className='sheet-overlay'; ov.id='sheet-overlay';
+  let body='';
+  if(type==='how'){
+    body = `<h3>✋ ${t('howTitle')}</h3><ol>${t('howList').map(x=>`<li>${x}</li>`).join('')}</ol>
+    <p style="font-size:.8rem;color:var(--ink-soft);">${t('kbdList').join('<br>')}</p>`;
+  } else {
+    body = `<h3>💡 ${t('factsTitle')}</h3><div class="facts-list">${t('factsList').map(f=>`<div class="fact-item"><span class="ic">${f.ic}</span><span>${f.en}</span></div>`).join('')}</div>`;
+  }
+  ov.innerHTML = `<div class="sheet"><button class="close-x" onclick="closeSheet()">✕</button>${body}</div>`;
+  document.body.appendChild(ov);
+  ov.addEventListener('click', (e)=>{ if(e.target===ov) closeSheet(); });
+}
+function closeSheet(){ const s=document.getElementById('sheet-overlay'); if(s) s.remove(); }
+
+/* ============================================================
+   SOUND (simple WebAudio beeps, no assets needed)
+   ============================================================ */
+let audioCtx=null;
+function beep(freq,dur){
+  if(!state.soundOn) return;
+  try{
+    audioCtx = audioCtx || new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
+    o.frequency.value=freq; o.type='sine'; o.connect(g); g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0.08, audioCtx.currentTime);
+    o.start(); o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+function toggleSound(){
+  state.soundOn = !state.soundOn;
+  document.getElementById('sound-toggle-chip').textContent = state.soundOn ? '🔊' : '🔇';
+}
+
+/* ============================================================
+   KEYBOARD SHORTCUTS
+   ============================================================ */
+document.addEventListener('keydown', (e)=>{
+  const key = e.key.toLowerCase();
+  if(['1','2','3','4'].includes(key)){
+    const idx = parseInt(key)-1;
+    const opts = document.querySelectorAll('#options-list .option');
+    if(opts[idx]) opts[idx].click();
+  } else if(key==='h'){ showHint(); }
+  else if(key==='p'){ if(!document.getElementById('screen-level').classList.contains('hidden')) pauseLevel(); }
+  else if(key==='c'){ toggleCameraFromChip(); }
+  else if(key==='m'){ toggleSound(); }
+  else if(key==='l'){ setLang(state.lang==='en'?'th':'en'); }
+  else if(key==='enter'||key==='tab'){
+    const nb = document.getElementById('next-btn');
+    if(nb && !nb.classList.contains('hidden')){ e.preventDefault(); nextQuestion(); }
+  }
+});
+
+/* ============================================================
+   ROTATE HINT (enable only once game starts)
+   ============================================================ */
+function checkRotate(){
+  const el = document.getElementById('rotate-hint');
+  const inGame = !document.getElementById('screen-level').classList.contains('hidden');
+  el.classList.toggle('enabled', inGame);
+}
+window.addEventListener('resize', checkRotate);
+window.addEventListener('orientationchange', checkRotate);
+
+/* ============================================================
+   INIT
+   ============================================================ */
+applyI18n();
+document.getElementById('cam-chip-label').textContent = 'Off';
+</script>
+</body>
+</html>
